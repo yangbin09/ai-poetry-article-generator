@@ -15,7 +15,7 @@ from src.interfaces.base import (
     PoemServiceInterface, ImageServiceInterface, 
     PromptServiceInterface, ConfigInterface
 )
-from src.core.models.poem import Poem
+from src.domain.models import Poem
 from src.infrastructure.container import configure_container
 from src.infrastructure.logging.logger import get_logger
 
@@ -47,7 +47,7 @@ class PoemCLI:
             logger.info(f"开始生成古诗词文章: {poem_name}")
             
             # 生成文章
-            poem_article = self.poem_service.generate_poem_article(poem_name)
+            poem_article = self.poem_service.generate_article(poem_name)
             
             # 输出结果
             if output_file:
@@ -79,25 +79,15 @@ class PoemCLI:
         try:
             logger.info(f"开始生成古诗词图像: {poem_name}")
             
-            # 创建诗词对象
-            poem = Poem(name=poem_name)
-            
-            # 创建图像生成请求
-            request = self.image_service.create_image_request(
-                poem=poem,
-                prompt=prompt,
-                save_local=True
-            )
-            
             # 生成图像
-            generated_image = self.image_service.generate_poem_image(request)
+            generated_image = self.image_service.generate_poem_image(
+                poem_name=poem_name,
+                custom_prompt=prompt
+            )
             
             # 输出结果
             print(f"图像生成成功!")
-            print(f"图像URL: {generated_image.url}")
-            if generated_image.local_path:
-                print(f"本地路径: {generated_image.local_path}")
-            print(f"使用的提示词: {generated_image.prompt}")
+            print(f"本地路径: {generated_image}")
             
             logger.info(f"古诗词图像生成完成: {poem_name}")
             
@@ -117,14 +107,11 @@ class PoemCLI:
         try:
             logger.info(f"开始优化提示词，风格: {style}")
             
-            # 创建优化请求
-            request = self.prompt_service.create_optimization_request(
+            # 优化提示词
+            optimized_prompt = self.prompt_service.optimize_prompt(
                 original_prompt=original_prompt,
                 style=style
             )
-            
-            # 优化提示词
-            optimized_prompt = self.prompt_service.optimize_prompt_advanced(request)
             
             # 输出结果
             if output_file:

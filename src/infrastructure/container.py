@@ -152,6 +152,6 @@ def configure_container() -> Container:
     # 注册服务
     container.register(PoemServiceInterface, PoemService)
     container.register(ImageServiceInterface, ImageService)
-    container.register(PromptServiceInterface, PromptService)
+    container.register_factory(PromptServiceInterface, lambda: PromptService())
     
     return container

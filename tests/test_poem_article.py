@@ -12,13 +12,13 @@ from unittest.mock import patch, MagicMock
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.poem_article import PoemArticleGenerator
+from src.core.generators.poem_article import PoemArticleGenerator
 
 
 class TestPoemArticleGenerator:
     """古诗词文章生成器测试"""
     
-    @patch('src.poem_article.config')
+    @patch('src.core.generators.base.config')
     def test_init(self, mock_config):
         """测试初始化"""
         mock_client = MagicMock()
@@ -31,7 +31,7 @@ class TestPoemArticleGenerator:
     
     def test_build_request_template(self):
         """测试构建请求模板"""
-        with patch('src.poem_article.config'):
+        with patch('src.core.generators.poem_article.config'):
             generator = PoemArticleGenerator()
             template = generator._build_request_template("静夜思")
             
@@ -43,7 +43,7 @@ class TestPoemArticleGenerator:
     
     def test_build_web_search_tools(self):
         """测试构建网页搜索工具配置"""
-        with patch('src.poem_article.config'):
+        with patch('src.core.generators.poem_article.config'):
             generator = PoemArticleGenerator()
             tools = generator._build_web_search_tools("静夜思")
             
@@ -53,7 +53,7 @@ class TestPoemArticleGenerator:
     
     def test_build_messages(self):
         """测试构建消息"""
-        with patch('src.poem_article.config'):
+        with patch('src.core.generators.poem_article.config'):
             generator = PoemArticleGenerator()
             messages, tools = generator._build_messages("静夜思")
             
@@ -65,7 +65,7 @@ class TestPoemArticleGenerator:
             assert len(tools) == 1
             assert tools[0]["type"] == "web_search"
     
-    @patch('src.poem_article.config')
+    @patch('src.core.generators.base.config')
     def test_generate_article_success(self, mock_config):
         """测试文章生成成功"""
         # 模拟API响应
@@ -89,7 +89,7 @@ class TestPoemArticleGenerator:
         assert len(call_args[1]["messages"]) == 2
         assert len(call_args[1]["tools"]) == 1
     
-    @patch('src.poem_article.config')
+    @patch('src.core.generators.base.config')
     def test_generate_article_failure(self, mock_config):
         """测试文章生成失败"""
         mock_client = MagicMock()
@@ -101,7 +101,7 @@ class TestPoemArticleGenerator:
         with pytest.raises(Exception, match="生成文章失败: API错误"):
             generator.generate_article("静夜思")
     
-    @patch('src.poem_article.config')
+    @patch('src.core.generators.base.config')
     def test_generate_article_custom_params(self, mock_config):
         """测试自定义参数的文章生成"""
         mock_response = MagicMock()
@@ -127,7 +127,7 @@ class TestPoemArticleGenerator:
     
     def test_save_article(self):
         """测试保存文章"""
-        with patch('src.poem_article.config'):
+        with patch('src.core.generators.poem_article.config'):
             generator = PoemArticleGenerator()
             
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -150,7 +150,7 @@ class TestPoemArticleGenerator:
     
     def test_save_article_creates_directory(self):
         """测试保存文章时自动创建目录"""
-        with patch('src.poem_article.config'):
+        with patch('src.core.generators.poem_article.config'):
             generator = PoemArticleGenerator()
             
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -171,7 +171,7 @@ class TestPoemArticleGenerator:
 class TestPoemArticleGeneratorIntegration:
     """古诗词文章生成器集成测试"""
     
-    @patch('src.poem_article.config')
+    @patch('src.core.generators.base.config')
     def test_full_workflow(self, mock_config):
         """测试完整工作流"""
         # 模拟API响应

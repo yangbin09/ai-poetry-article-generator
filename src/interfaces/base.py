@@ -37,6 +37,11 @@ class ImageServiceInterface(ABC):
     def generate_image(self, prompt: str, **kwargs) -> str:
         """生成图像"""
         pass
+    
+    @abstractmethod
+    def generate_poem_image(self, poem_name: str, custom_prompt: str = "", **kwargs) -> str:
+        """生成古诗词图像"""
+        pass
 
 
 class PromptServiceInterface(ABC):

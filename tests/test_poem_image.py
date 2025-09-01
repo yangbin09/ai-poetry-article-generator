@@ -12,13 +12,13 @@ from unittest.mock import patch, MagicMock, mock_open
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.poem_image import PoemImageGenerator
+from src.core.generators.poem_image import PoemImageGenerator
 
 
 class TestPoemImageGenerator:
     """古诗词图像生成器测试"""
     
-    @patch('src.poem_image.config')
+    @patch('src.core.generators.base.config')
     def test_init(self, mock_config):
         """测试初始化"""
         mock_client = MagicMock()
@@ -29,7 +29,7 @@ class TestPoemImageGenerator:
         mock_config.get_zhipu_client.assert_called_once()
         assert generator.client == mock_client
     
-    @patch('src.poem_image.config')
+    @patch('src.core.generators.base.config')
     def test_generate_image_from_prompt_success(self, mock_config):
         """测试从提示词生成图像成功"""
         # 模拟API响应
@@ -52,7 +52,7 @@ class TestPoemImageGenerator:
         assert call_args[1]["prompt"] == "美丽的山水画"
         assert call_args[1]["size"] == "1024x1024"
     
-    @patch('src.poem_image.config')
+    @patch('src.core.generators.base.config')
     def test_generate_image_from_prompt_custom_params(self, mock_config):
         """测试自定义参数的图像生成"""
         mock_response = MagicMock()
@@ -76,7 +76,7 @@ class TestPoemImageGenerator:
         assert call_args[1]["model"] == "cogview-3-plus"
         assert call_args[1]["size"] == "512x512"
     
-    @patch('src.poem_image.config')
+    @patch('src.core.generators.base.config')
     def test_generate_image_from_prompt_failure(self, mock_config):
         """测试图像生成失败"""
         mock_client = MagicMock()
@@ -88,7 +88,7 @@ class TestPoemImageGenerator:
         with pytest.raises(Exception, match="生成图像失败: API错误"):
             generator.generate_image_from_prompt("测试提示词")
     
-    @patch('src.poem_image.config')
+    @patch('src.core.generators.base.config')
     def test_generate_image_from_poem(self, mock_config):
         """测试从古诗词生成图像"""
         mock_response = MagicMock()
@@ -110,7 +110,7 @@ class TestPoemImageGenerator:
         assert "水墨画" in prompt
         assert "中国古典" in prompt
     
-    @patch('src.poem_image.config')
+    @patch('src.core.generators.base.config')
     def test_generate_image_from_poem_custom_style(self, mock_config):
         """测试自定义风格的古诗词图像生成"""
         mock_response = MagicMock()
@@ -143,24 +143,22 @@ class TestPoemImageGenerator:
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
         
-        with patch('src.poem_image.config'):
+        with patch('src.core.generators.poem_image.config'):
             generator = PoemImageGenerator()
             
             with tempfile.TemporaryDirectory() as temp_dir:
+                output_path = os.path.join(temp_dir, "静夜思_图像.jpg")
                 file_path = generator.download_image(
                     "https://example.com/image.jpg",
-                    "静夜思",
-                    temp_dir
+                    output_path
                 )
                 
                 # 验证文件路径
-                expected_path = os.path.join(temp_dir, "静夜思_图像.jpg")
-                assert file_path == expected_path
+                assert file_path == output_path
                 
                 # 验证HTTP请求
                 mock_get.assert_called_once_with(
-                    "https://example.com/image.jpg", 
-                    timeout=30
+                    "https://example.com/image.jpg"
                 )
                 
                 # 验证文件内容
@@ -177,16 +175,16 @@ class TestPoemImageGenerator:
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
         
-        with patch('src.poem_image.config'):
+        with patch('src.core.generators.poem_image.config'):
             generator = PoemImageGenerator()
             
             with tempfile.TemporaryDirectory() as temp_dir:
                 output_dir = os.path.join(temp_dir, "new_directory")
+                output_path = os.path.join(output_dir, "测试诗.jpg")
                 
                 file_path = generator.download_image(
                     "https://example.com/test.jpg",
-                    "测试诗",
-                    output_dir
+                    output_path
                 )
                 
                 # 验证目录被创建
@@ -198,18 +196,19 @@ class TestPoemImageGenerator:
         """测试下载图像失败"""
         mock_get.side_effect = Exception("网络错误")
         
-        with patch('src.poem_image.config'):
+        with patch('src.core.generators.poem_image.config'):
             generator = PoemImageGenerator()
             
+            
             with tempfile.TemporaryDirectory() as temp_dir:
+                output_path = os.path.join(temp_dir, "静夜思.jpg")
                 with pytest.raises(Exception, match="下载图像失败: 网络错误"):
                     generator.download_image(
                         "https://example.com/image.jpg",
-                        "静夜思",
-                        temp_dir
+                        output_path
                     )
     
-    @patch('src.poem_image.config')
+    @patch('src.core.generators.base.config')
     @patch('requests.get')
     def test_generate_and_save_image_success(self, mock_get, mock_config):
         """测试生成并保存图像成功"""
@@ -230,14 +229,13 @@ class TestPoemImageGenerator:
         generator = PoemImageGenerator()
         
         with tempfile.TemporaryDirectory() as temp_dir:
-            image_url, file_path = generator.generate_and_save_image(
+            file_path = generator.generate_and_save_image(
                 "春晓",
                 temp_dir
             )
             
             # 验证返回值
-            assert image_url == "https://example.com/generated.jpg"
-            expected_path = os.path.join(temp_dir, "春晓_图像.jpg")
+            expected_path = os.path.join(temp_dir, "春晓_水墨画.jpg")
             assert file_path == expected_path
             
             # 验证文件存在
@@ -247,7 +245,7 @@ class TestPoemImageGenerator:
 class TestPoemImageGeneratorIntegration:
     """古诗词图像生成器集成测试"""
     
-    @patch('src.poem_image.config')
+    @patch('src.core.generators.base.config')
     @patch('requests.get')
     def test_full_workflow(self, mock_get, mock_config):
         """测试完整工作流"""
@@ -272,10 +270,10 @@ class TestPoemImageGeneratorIntegration:
             image_url = generator.generate_image_from_poem("登鹳雀楼")
             
             # 下载图像
+            output_path = os.path.join(temp_dir, "登鹳雀楼_图像.jpg")
             file_path = generator.download_image(
                 image_url, 
-                "登鹳雀楼", 
-                temp_dir
+                output_path
             )
             
             # 验证结果

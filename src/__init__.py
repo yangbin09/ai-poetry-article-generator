@@ -16,16 +16,16 @@ from .interfaces.base import (
     ConfigInterface
 )
 from .domain.models import PoemArticle, ImageResult, PromptOptimization
-from .services.poem_service import PoemService
-from .services.image_service import ImageService
-from .services.prompt_service import PromptService
+from .core.services.poem_service import PoemService
+from .core.services.image_service import ImageService
+from .core.services.prompt_service import PromptService
 from .infrastructure.config import Config
 
 # 向后兼容的导入（已弃用）
 try:
-    from .services.poem_service import PoemService as PoemArticleGenerator
-    from .services.image_service import ImageService as PoemImageGenerator
-    from .services.prompt_service import PromptService as PromptOptimizer
+    from .core.services.poem_service import PoemService as PoemArticleGenerator
+    from .core.services.image_service import ImageService as PoemImageGenerator
+    from .core.services.prompt_service import PromptService as PromptOptimizer
 except ImportError:
     # 如果新服务不可用，提供占位符
     PoemArticleGenerator = None

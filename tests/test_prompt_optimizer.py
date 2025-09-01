@@ -11,13 +11,13 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.prompt_optimizer import PromptOptimizer
+from src.core.generators.prompt_optimizer import PromptOptimizer
 
 
 class TestPromptOptimizer:
     """提示词优化器测试"""
     
-    @patch('src.prompt_optimizer.config')
+    @patch('src.core.generators.base.config')
     def test_init(self, mock_config):
         """测试初始化"""
         mock_client = MagicMock()
@@ -29,7 +29,7 @@ class TestPromptOptimizer:
         assert optimizer.client == mock_client
         assert optimizer.model == "glm-4"
     
-    @patch('src.prompt_optimizer.config')
+    @patch('src.core.generators.base.config')
     def test_optimize_prompt_success(self, mock_config):
         """测试优化提示词成功"""
         # 模拟API响应
@@ -58,7 +58,7 @@ class TestPromptOptimizer:
         assert messages[1]["role"] == "user"
         assert "静夜思" in messages[1]["content"]
     
-    @patch('src.prompt_optimizer.config')
+    @patch('src.core.generators.base.config')
     def test_optimize_prompt_with_style(self, mock_config):
         """测试带风格的提示词优化"""
         mock_response = MagicMock()
@@ -79,7 +79,7 @@ class TestPromptOptimizer:
         assert "春晓" in user_message
         assert "油画风格" in user_message
     
-    @patch('src.prompt_optimizer.config')
+    @patch('src.core.generators.base.config')
     def test_optimize_prompt_failure(self, mock_config):
         """测试提示词优化失败"""
         mock_client = MagicMock()
@@ -110,7 +110,7 @@ class TestPromptOptimizer:
 class TestPromptOptimizerIntegration:
     """提示词优化器集成测试"""
     
-    @patch('src.prompt_optimizer.config')
+    @patch('src.core.generators.base.config')
     def test_full_workflow(self, mock_config):
         """测试完整工作流程"""
         mock_response = MagicMock()
