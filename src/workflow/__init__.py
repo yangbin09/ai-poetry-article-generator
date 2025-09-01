@@ -1,29 +1,67 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-模块化工作流演示系统
+工作流模块
 
-这是一个基于模块化架构的工作流演示系统，支持：
-- 独立的步骤模块
-- 动态工作流配置
-- 标准化数据传递
-- 可视化配置管理
+提供工作流引擎和相关功能。
 """
 
-from .base import WorkflowStep, WorkflowData, StepResult
-from .engine import WorkflowEngine
-from .config import WorkflowConfig, WorkflowTemplate
-from .manager import WorkflowManager
+from .engine.workflow_engine import (
+    WorkflowEngine,
+    WorkflowStep,
+    WorkflowContext,
+    StepResult,
+    StepStatus,
+    WorkflowStatus,
+    FunctionStep,
+    engine
+)
 
-__version__ = "1.0.0"
-__author__ = "AI Assistant"
+from .base import (
+    StepStatus,
+    WorkflowData as BaseWorkflowData,
+    StepResult as BaseStepResult,
+    WorkflowStep as BaseWorkflowStep,
+    ConditionalStep as BaseConditionalStep
+)
+
+from .config import (
+    WorkflowConfig,
+    StepConfig,
+    WorkflowTemplate,
+    ConfigManager
+)
+
+from .manager import (
+    WorkflowManager,
+    WorkflowExecution,
+    FunctionRegistry,
+    get_workflow_manager,
+    reset_workflow_manager
+)
 
 __all__ = [
-    "WorkflowStep",
-    "WorkflowData", 
-    "StepResult",
-    "WorkflowEngine",
-    "WorkflowConfig",
-    "WorkflowTemplate",
-    "WorkflowManager"
+    # 基础模块
+    'WorkflowStep',
+    'StepResult', 
+    'StepStatus',
+    'WorkflowData',
+    'ConditionalStep',
+    
+    # 配置模块
+    'StepConfig',
+    'WorkflowConfig',
+    'WorkflowTemplate',
+    'ConfigManager',
+    
+    # 管理器模块
+    'WorkflowManager',
+    'get_workflow_manager',
+    
+    # 引擎模块
+    'WorkflowEngine',
+    'WorkflowContext',
+    'WorkflowStatus',
+    'FunctionStep',
+    'engine'
 ]

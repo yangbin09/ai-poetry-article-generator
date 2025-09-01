@@ -1,0 +1,18 @@
+{
+  "workflow_id": "unknown",
+  "execution_time": "2025-09-02T00:05:16.443663",
+  "data": {
+    "poem_name": "静夜思",
+    "client_mode": "real",
+    "client_initialized": true,
+    "initialization_time": "2025-09-02T00:05:16.443663",
+    "article_content": "# 春天诗词赏析\n\n春天是诗人们最喜爱的主题之一。在古典诗词中，我们可以看到对春天的深情描绘。\n\n## 经典诗句\n\n\"春眠不觉晓，处处闻啼鸟。\n夜来风雨声，花落知多少。\"\n\n这首诗以简洁的语言，描绘了春天的美好景象。\n\n## 诗词解析\n\n诗人通过细腻的观察，将春天的特色展现得淋漓尽致。\n\n生成时间: 2025-09-02 00:05:16\n",
+    "article_length": 171,
+    "generation_time": "2025-09-02T00:05:16.443663",
+    "image_prompt": "中国古典绘画风格，春眠不觉晓，处处闻啼鸟，chinese_painting，水墨画，意境深远",
+    "image_url": "https://example.com/generated_image_20250902_000516.jpg",
+    "image_style": "chinese_painting",
+    "image_generation_time": "2025-09-02T00:05:16.443663"
+  },
+  "metadata": {}
+}

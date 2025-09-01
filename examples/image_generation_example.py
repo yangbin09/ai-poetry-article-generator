@@ -14,12 +14,14 @@ from dotenv import load_dotenv
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from src.workflow.base import WorkflowData
-from src.workflows.poem_article.steps import (
-    EnvironmentSetupStep,
-    ClientInitializationStep,
-    ImageGenerationStep
+from src.workflow import (
+    WorkflowManager, 
+    WorkflowConfig, 
+    StepConfig, 
+    WorkflowTemplate,
+    get_workflow_manager
 )
+from src.workflow.base import WorkflowData, StepResult, StepStatus
 
 # 配置日志
 logging.basicConfig(
@@ -29,61 +31,77 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def main():
-    """主函数 - 演示图像生成步骤的使用"""
+async def main():
+    """主函数 - 演示图像生成工作流的使用"""
     try:
-        # 初始化工作流数据
-        data = WorkflowData()
+        # 获取工作流管理器
+        manager = get_workflow_manager()
         
-        # 步骤1: 环境设置
-        env_step = EnvironmentSetupStep(
-            name="environment_setup",
-            description="设置环境变量"
-        )
-        result = env_step.execute(data)
-        if not result.success:
-            logger.error(f"环境设置失败: {result.error}")
-            return
+        # 创建图像生成工作流配置
+        config = WorkflowTemplate.create_image_generation_template()
         
-        # 步骤2: 客户端初始化
-        client_step = ClientInitializationStep(
-            name="client_initialization",
-            description="初始化智谱AI客户端"
-        )
-        result = client_step.execute(data)
-        if not result.success:
-            logger.error(f"客户端初始化失败: {result.error}")
-            return
+        # 保存配置
+        config_path = manager.config_manager.save_config(config, "image_generation_example.json")
+        logger.info(f"工作流配置已保存到: {config_path}")
         
-        # 步骤3: 图像生成
-        # 设置图像生成的输入数据
-        data.set("poem_content", "床前明月光，疑是地上霜。举头望明月，低头思故乡。")
+        # 准备输入数据
+        input_data = {
+            "prompt": "床前明月光，疑是地上霜。举头望明月，低头思故乡。",
+            "poem_content": "静夜思 - 李白",
+            "style": "chinese_painting"
+        }
         
-        image_step = ImageGenerationStep(
-            name="image_generation",
-            description="生成诗词相关图像",
-            config={
-                "model": "cogView-4-250304",
-                "save_results": True,
-                "save_path": "image_generation_results.txt"
-            }
+        print("\n=== 开始执行图像生成工作流 ===")
+        print(f"输入数据: {input_data}")
+        
+        # 执行工作流
+        execution = await manager.execute_workflow(
+            "image_generation_example.json",
+            input_data=input_data
         )
         
-        result = image_step.execute(data)
-        if result.success:
-            image_url = data.get("image_url")
-            image_prompt = data.get("image_prompt")
+        # 检查执行结果
+        if execution.status == "completed":
+            print("\n=== 图像生成工作流执行成功 ===")
+            print(f"工作流ID: {execution.workflow_id}")
+            print(f"执行时长: {execution.duration:.2f}秒")
+            print(f"完成步骤: {len([r for r in execution.step_results.values() if r.status == StepStatus.COMPLETED])}")
             
-            print("\n=== 图像生成成功 ===")
-            print(f"提示词: {image_prompt}")
-            print(f"图像URL: {image_url}")
-            print(f"生成时间: {data.get('image_generation_time')}")
+            # 显示结果
+            if execution.results:
+                print(f"\n执行结果:")
+                for key, value in execution.results.items():
+                    print(f"  {key}: {value}")
+            
+            # 显示步骤详情
+            print(f"\n步骤执行详情:")
+            for step_name, step_result in execution.step_results.items():
+                status_icon = "✓" if step_result.status == StepStatus.COMPLETED else "✗"
+                print(f"  {status_icon} {step_name}: {step_result.message}")
+                
         else:
-            logger.error(f"图像生成失败: {result.error}")
+            print("\n=== 图像生成工作流执行失败 ===")
+            print(f"状态: {execution.status}")
+            if execution.errors:
+                print(f"错误信息:")
+                for error in execution.errors:
+                    print(f"  - {error}")
+        
+        # 显示可用函数
+        print("\n=== 可用函数列表 ===")
+        functions = manager.get_function_list()
+        print(f"注册的函数: {functions}")
+        
+        # 显示执行历史
+        print("\n=== 执行历史 ===")
+        executions = manager.list_executions()
+        for exec_record in executions[-3:]:  # 显示最近3次执行
+            print(f"- {exec_record.workflow_id}: {exec_record.status} ({exec_record.config_name})")
             
     except Exception as e:
         logger.error(f"程序执行失败: {e}")
 
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())

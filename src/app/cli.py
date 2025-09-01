@@ -82,7 +82,8 @@ class PoemCLI:
             # 生成图像
             generated_image = self.image_service.generate_poem_image(
                 poem_name=poem_name,
-                custom_prompt=prompt
+                custom_prompt=prompt,
+                output_dir=output_dir
             )
             
             # 输出结果

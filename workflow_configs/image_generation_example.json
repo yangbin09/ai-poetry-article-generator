@@ -1,0 +1,61 @@
+{
+  "name": "image_generation_workflow",
+  "description": "图像生成工作流",
+  "version": "1.0.0",
+  "steps": [
+    {
+      "name": "optimize_prompt",
+      "type": "function",
+      "description": "优化绘画提示词",
+      "function": "optimize_painting_prompt",
+      "condition": null,
+      "parameters": {
+        "style": "chinese_painting"
+      },
+      "dependencies": [],
+      "optional": false,
+      "timeout": null,
+      "retry_count": 0
+    },
+    {
+      "name": "generate_image",
+      "type": "function",
+      "description": "生成图像",
+      "function": "generate_image_from_prompt",
+      "condition": null,
+      "parameters": {
+        "model": "cogview-3",
+        "size": "1024x1024"
+      },
+      "dependencies": [
+        "optimize_prompt"
+      ],
+      "optional": false,
+      "timeout": null,
+      "retry_count": 0
+    },
+    {
+      "name": "save_image",
+      "type": "function",
+      "description": "保存图像",
+      "function": "save_generated_image",
+      "condition": null,
+      "parameters": {
+        "output_dir": "output/images"
+      },
+      "dependencies": [
+        "generate_image"
+      ],
+      "optional": false,
+      "timeout": null,
+      "retry_count": 0
+    }
+  ],
+  "variables": {
+    "prompt": "",
+    "style": "chinese_painting",
+    "quality": "high"
+  },
+  "settings": {},
+  "metadata": {}
+}

@@ -1,0 +1,12 @@
+{
+  "name": "custom_poem_workflow",
+  "description": "自定义古诗词工作流",
+  "version": "1.0.0",
+  "steps": [],
+  "variables": {
+    "poem_name": "春晓",
+    "style": "classical"
+  },
+  "settings": {},
+  "metadata": {}
+}

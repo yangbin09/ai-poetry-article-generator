@@ -43,15 +43,22 @@ class ImageService(ImageServiceInterface):
         logger.info(f"开始生成图像，提示词长度: {len(prompt)}")
         
         try:
-            # 使用生成器生成图像
-            image_path = self.generator.generate_image(
-                prompt=prompt,
-                output_path=kwargs.get('output_path'),
-                **kwargs
-            )
-            
-            logger.info(f"图像生成成功: {image_path}")
-            return image_path
+            # 检查是否提供了输出路径
+            output_path = kwargs.get('output_path')
+            if output_path:
+                # 如果提供了输出路径，则生成并保存图像到本地
+                image_url = self.generator.generate_image_from_prompt(prompt, **kwargs)
+                # 确保输出目录存在
+                os.makedirs(os.path.dirname(output_path), exist_ok=True)
+                # 下载图像并保存到指定路径
+                local_path = self.generator.download_image(image_url, output_path)
+                logger.info(f"图像生成并保存成功: {local_path}")
+                return local_path
+            else:
+                # 如果没有提供输出路径，则只生成图像URL
+                image_url = self.generator.generate_image_from_prompt(prompt, **kwargs)
+                logger.info(f"图像生成成功: {image_url}")
+                return image_url
             
         except Exception as e:
             logger.error(f"生成图像失败，错误: {e}")
@@ -77,14 +84,27 @@ class ImageService(ImageServiceInterface):
             else:
                 prompt = f"{poem_name}，中国古典诗词意境，唯美，高质量"
             
-            # 使用生成器生成图像
-            image_path = self.generator.generate_image_from_prompt(
-                prompt=prompt,
-                **kwargs
-            )
-            
-            logger.info(f"古诗词图像生成成功: {image_path}")
-            return image_path
+            # 检查是否提供了输出目录
+            output_dir = kwargs.get('output_dir')
+            if output_dir:
+                # 如果提供了输出目录，则使用生成器的generate_and_save_image方法
+                # 生成文件名
+                filename = f"{poem_name}.jpg"
+                output_path = os.path.join(output_dir, filename)
+                kwargs['output_path'] = output_path
+                
+                image_url = self.generator.generate_image_from_prompt(prompt, **kwargs)
+                # 确保输出目录存在
+                os.makedirs(os.path.dirname(output_path), exist_ok=True)
+                # 下载图像并保存到指定路径
+                local_path = self.generator.download_image(image_url, output_path)
+                logger.info(f"古诗词图像生成并保存成功: {local_path}")
+                return local_path
+            else:
+                # 如果没有提供输出目录，则只生成图像URL
+                image_url = self.generator.generate_image_from_prompt(prompt, **kwargs)
+                logger.info(f"古诗词图像生成成功: {image_url}")
+                return image_url
             
         except Exception as e:
             logger.error(f"生成古诗词图像失败，错误: {e}")
