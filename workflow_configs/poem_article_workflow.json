@@ -1,0 +1,91 @@
+{
+  "name": "poem_article_generation",
+  "description": "古诗词文章生成工作流",
+  "version": "1.0.0",
+  "steps": [
+    {
+      "name": "environment_setup",
+      "type": "EnvironmentSetupStep",
+      "description": "环境设置步骤",
+      "config": {
+        "env_file": ".env"
+      },
+      "enabled": true,
+      "timeout": 30,
+      "retry_count": 1
+    },
+    {
+      "name": "client_initialization",
+      "type": "ClientInitializationStep",
+      "description": "客户端初始化步骤",
+      "config": {},
+      "enabled": true,
+      "timeout": 30,
+      "retry_count": 2,
+      "dependencies": ["environment_setup"]
+    },
+    {
+      "name": "poem_request_build",
+      "type": "PoemRequestBuildStep",
+      "description": "诗词请求构建步骤",
+      "config": {
+        "model": "glm-4-plus",
+        "temperature": 0.8,
+        "max_tokens": 2000
+      },
+      "enabled": true,
+      "timeout": 60,
+      "retry_count": 1,
+      "dependencies": ["client_initialization"]
+    },
+    {
+      "name": "article_generation",
+      "type": "ArticleGenerationStep",
+      "description": "文章生成步骤",
+      "config": {},
+      "enabled": true,
+      "timeout": 300,
+      "retry_count": 3,
+      "dependencies": ["poem_request_build"]
+    },
+    {
+      "name": "image_generation",
+      "type": "ImageGenerationStep",
+      "description": "图像生成步骤",
+      "config": {
+        "model": "cogView-4-250304",
+        "save_results": true,
+        "save_path": "image_results.txt"
+      },
+      "enabled": false,
+      "timeout": 120,
+      "retry_count": 2,
+      "dependencies": ["article_generation"]
+    },
+    {
+      "name": "result_output",
+      "type": "ResultOutputStep",
+      "description": "结果输出步骤",
+      "config": {
+        "save": true,
+        "output_dir": "output"
+      },
+      "enabled": true,
+      "timeout": 60,
+      "retry_count": 1,
+      "dependencies": ["article_generation"]
+    }
+  ],
+  "global_config": {
+    "timeout": 600,
+    "retry_enabled": true,
+    "log_level": "INFO",
+    "parallel_execution": false,
+    "stop_on_error": true
+  },
+  "metadata": {
+    "author": "AI Assistant",
+    "category": "content_generation",
+    "tags": ["poetry", "article", "ai_generation"]
+  }
+}

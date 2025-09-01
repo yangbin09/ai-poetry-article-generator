@@ -15,6 +15,7 @@ from .environment_setup import EnvironmentSetupStep
 from .client_initialization import ClientInitializationStep
 from .poem_request_build import PoemRequestBuildStep
 from .article_generation import ArticleGenerationStep
+from .image_generation import ImageGenerationStep
 from .result_output import ResultOutputStep
 
 __all__ = [
@@ -22,5 +23,6 @@ __all__ = [
     "ClientInitializationStep",
     "PoemRequestBuildStep",
     "ArticleGenerationStep",
+    "ImageGenerationStep",
     "ResultOutputStep"
 ]
