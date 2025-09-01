@@ -8,47 +8,53 @@
 
 import sys
 import os
+from pathlib import Path
 
 # 添加项目根目录到Python路径
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
-from src import PoemArticleGenerator, PoemImageGenerator, PromptOptimizer
+from src.infrastructure.container import configure_container
+from src.interfaces.base import (
+    PoemServiceInterface, ImageServiceInterface, 
+    PromptServiceInterface, ConfigInterface
+)
 
 
-def demo_article_generation():
+def demo_article_generation(container):
     """演示文章生成功能"""
     print("=" * 50)
     print("📝 古诗词文章生成演示")
     print("=" * 50)
     
     try:
-        # 初始化文章生成器
-        generator = PoemArticleGenerator()
+        # 获取诗词服务
+        poem_service = container.resolve(PoemServiceInterface)
         
         # 生成文章
         poem_name = "静夜思"
         print(f"正在为《{poem_name}》生成文章...")
         
-        article = generator.generate_article(poem_name)
-        print(f"\n生成的文章内容：\n{article}")
+        article = poem_service.generate_article(poem_name)
+        print(f"\n生成的文章内容：\n{article.content}")
         
         # 保存文章
-        file_path = generator.save_article(poem_name, article)
+        file_path = poem_service.save_article_to_file(article, f"{poem_name}.md")
         print(f"\n✅ 文章已保存到: {file_path}")
         
     except Exception as e:
         print(f"❌ 文章生成失败: {e}")
 
 
-def demo_image_generation():
+def demo_image_generation(container):
     """演示图像生成功能"""
     print("\n" + "=" * 50)
     print("🎨 古诗词图像生成演示")
     print("=" * 50)
     
     try:
-        # 初始化图像生成器
-        generator = PoemImageGenerator()
+        # 获取图像服务
+        image_service = container.resolve(ImageServiceInterface)
         
         # 生成图像
         poem_name = "静夜思"
@@ -56,45 +62,46 @@ def demo_image_generation():
         
         print(f"正在为《{poem_name}》生成图像...")
         
-        result = generator.generate_and_save_image(
+        result = image_service.generate_image(
             poem_name=poem_name,
             poem_content=poem_content,
             style="水墨画"
         )
         
         print(f"\n✅ 图像生成成功！")
-        print(f"图像URL: {result['url']}")
-        print(f"本地路径: {result['local_path']}")
+        print(f"图像URL: {result.url}")
+        print(f"本地路径: {result.local_path}")
         
     except Exception as e:
         print(f"❌ 图像生成失败: {e}")
 
 
-def demo_prompt_optimization():
+def demo_prompt_optimization(container):
     """演示提示词优化功能"""
     print("\n" + "=" * 50)
     print("✨ 提示词优化演示")
     print("=" * 50)
     
     try:
-        # 初始化提示词优化器
-        optimizer = PromptOptimizer()
+        # 获取提示词服务
+        prompt_service = container.resolve(PromptServiceInterface)
         
         # 优化单个提示词
         original_prompt = "根据《静夜思》创作一幅画"
         print(f"原始提示词: {original_prompt}")
         
-        optimized = optimizer.optimize_painting_prompt(original_prompt, style="水墨画")
-        print(f"\n优化后提示词: {optimized}")
+        optimized = prompt_service.optimize_prompt(original_prompt, style="水墨画")
+        print(f"\n优化后提示词: {optimized.optimized_prompt}")
         
         # 获取多种风格建议
         print("\n🎭 多种风格建议:")
         poem_content = "床前明月光，疑是地上霜。举头望明月，低头思故乡。"
-        suggestions = optimizer.get_style_suggestions(poem_content)
+        suggestions = prompt_service.get_style_suggestions(poem_content)
         
-        for style, prompt in suggestions.items():
-            print(f"\n{style}风格:")
-            print(f"  {prompt[:100]}..." if len(prompt) > 100 else f"  {prompt}")
+        for suggestion in suggestions:
+            print(f"\n{suggestion.style}风格:")
+            prompt_text = suggestion.prompt
+            print(f"  {prompt_text[:100]}..." if len(prompt_text) > 100 else f"  {prompt_text}")
         
         print("\n✅ 提示词优化完成！")
         
@@ -102,29 +109,45 @@ def demo_prompt_optimization():
         print(f"❌ 提示词优化失败: {e}")
 
 
-def demo_batch_processing():
+def demo_batch_processing(container):
     """演示批量处理功能"""
     print("\n" + "=" * 50)
     print("🔄 批量处理演示")
     print("=" * 50)
     
     try:
-        optimizer = PromptOptimizer()
+        # 获取服务
+        poem_service = container.resolve(PoemServiceInterface)
+        image_service = container.resolve(ImageServiceInterface)
         
-        # 批量优化提示词
-        prompts = [
-            "描绘月夜思乡的场景",
-            "表现古代文人的情怀",
-            "展现中秋月圆的意境"
-        ]
+        # 批量生成文章
+        poem_names = ["静夜思", "春晓", "登鹳雀楼"]
         
-        print("正在批量优化提示词...")
-        results = optimizer.batch_optimize(prompts, style="水墨画")
+        print("📚 批量生成文章...")
         
-        for i, (original, optimized) in enumerate(results.items(), 1):
-            print(f"\n📝 提示词 {i}:")
-            print(f"原始: {original}")
-            print(f"优化: {optimized[:100]}..." if len(optimized) > 100 else f"优化: {optimized}")
+        for poem_name in poem_names:
+            print(f"\n正在处理: {poem_name}")
+            article = poem_service.generate_article(poem_name)
+            file_path = poem_service.save_article_to_file(article, f"{poem_name}.md")
+            print(f"✅ 已保存: {file_path}")
+        
+        # 批量生成图像
+        print("\n🎨 批量生成图像...")
+        
+        poem_contents = {
+            "静夜思": "床前明月光，疑是地上霜。举头望明月，低头思故乡。",
+            "春晓": "春眠不觉晓，处处闻啼鸟。夜来风雨声，花落知多少。",
+            "登鹳雀楼": "白日依山尽，黄河入海流。欲穷千里目，更上一层楼。"
+        }
+        
+        for poem_name, content in poem_contents.items():
+            print(f"\n正在为《{poem_name}》生成图像...")
+            result = image_service.generate_image(
+                poem_name=poem_name,
+                poem_content=content,
+                style="水墨画"
+            )
+            print(f"✅ 图像已生成: {result.local_path}")
         
         print("\n✅ 批量处理完成！")
         
@@ -144,11 +167,14 @@ def main():
         return
     
     try:
+        # 配置依赖注入容器
+        container = configure_container()
+        
         # 演示各个功能
-        demo_article_generation()
-        demo_image_generation()
-        demo_prompt_optimization()
-        demo_batch_processing()
+        demo_article_generation(container)
+        demo_image_generation(container)
+        demo_prompt_optimization(container)
+        demo_batch_processing(container)
         
         print("\n" + "=" * 50)
         print("🎉 所有演示完成！")

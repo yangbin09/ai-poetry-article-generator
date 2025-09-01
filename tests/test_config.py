@@ -19,34 +19,35 @@ class TestConfig:
     
     def test_config_init(self):
         """测试配置初始化"""
-        with patch('src.config.load_dotenv') as mock_load_dotenv:
+        with patch('src.infrastructure.config.config.load_dotenv') as mock_load_dotenv:
             with patch.dict(os.environ, {'ZHIPU_API_KEY': 'test_key'}):
                 test_config = Config()
                 mock_load_dotenv.assert_called_once()
-                assert test_config._api_key == 'test_key'
+                assert test_config.zhipu_api_key == 'test_key'
     
     def test_api_key_property_success(self):
         """测试API密钥属性获取成功"""
         with patch.dict(os.environ, {'ZHIPU_API_KEY': 'test_key'}):
             test_config = Config()
-            assert test_config.api_key == 'test_key'
+            assert test_config.zhipu_api_key == 'test_key'
     
     def test_api_key_property_missing(self):
         """测试API密钥缺失时的异常"""
         with patch.dict(os.environ, {}, clear=True):
-            test_config = Config()
-            with pytest.raises(ValueError, match="请在 .env 文件中设置 ZHIPU_API_KEY 环境变量"):
-                _ = test_config.api_key
+            with patch('src.infrastructure.config.config.load_dotenv'):
+                test_config = Config()
+                with pytest.raises(ValueError, match="请在 .env 文件中设置 ZHIPU_API_KEY 环境变量"):
+                    _ = test_config.zhipu_api_key
     
-    @patch('src.config.ZhipuAiClient')
-    def test_get_client(self, mock_client_class):
-        """测试获取客户端"""
+    @patch('src.infrastructure.config.config.ZhipuAI')
+    def test_get_zhipu_client(self, mock_client_class):
+        """测试获取智谱AI客户端"""
         mock_client_instance = MagicMock()
         mock_client_class.return_value = mock_client_instance
         
         with patch.dict(os.environ, {'ZHIPU_API_KEY': 'test_key'}):
             test_config = Config()
-            client = test_config.get_client()
+            client = test_config.get_zhipu_client()
             
             mock_client_class.assert_called_once_with(api_key='test_key')
             assert client == mock_client_instance
@@ -59,7 +60,7 @@ class TestConfig:
 class TestConfigIntegration:
     """配置集成测试"""
     
-    @patch('src.config.ZhipuAiClient')
+    @patch('src.infrastructure.config.config.ZhipuAI')
     def test_config_workflow(self, mock_client_class):
         """测试配置工作流"""
         mock_client_instance = MagicMock()
@@ -70,11 +71,11 @@ class TestConfigIntegration:
             test_config = Config()
             
             # 验证API密钥
-            assert test_config.api_key == 'workflow_test_key'
+            assert test_config.zhipu_api_key == 'workflow_test_key'
             
             # 获取客户端
-            client1 = test_config.get_client()
-            client2 = test_config.get_client()
+            client1 = test_config.get_zhipu_client()
+            client2 = test_config.get_zhipu_client()
             
             # 验证每次调用都创建新的客户端实例
             assert mock_client_class.call_count == 2

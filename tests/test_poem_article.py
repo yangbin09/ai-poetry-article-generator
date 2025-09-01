@@ -22,11 +22,11 @@ class TestPoemArticleGenerator:
     def test_init(self, mock_config):
         """测试初始化"""
         mock_client = MagicMock()
-        mock_config.get_client.return_value = mock_client
+        mock_config.get_zhipu_client.return_value = mock_client
         
         generator = PoemArticleGenerator()
         
-        mock_config.get_client.assert_called_once()
+        mock_config.get_zhipu_client.assert_called_once()
         assert generator.client == mock_client
     
     def test_build_request_template(self):
@@ -74,7 +74,7 @@ class TestPoemArticleGenerator:
         
         mock_client = MagicMock()
         mock_client.chat.completions.create.return_value = mock_response
-        mock_config.get_client.return_value = mock_client
+        mock_config.get_zhipu_client.return_value = mock_client
         
         generator = PoemArticleGenerator()
         result = generator.generate_article("静夜思")
@@ -94,7 +94,7 @@ class TestPoemArticleGenerator:
         """测试文章生成失败"""
         mock_client = MagicMock()
         mock_client.chat.completions.create.side_effect = Exception("API错误")
-        mock_config.get_client.return_value = mock_client
+        mock_config.get_zhipu_client.return_value = mock_client
         
         generator = PoemArticleGenerator()
         
@@ -109,7 +109,7 @@ class TestPoemArticleGenerator:
         
         mock_client = MagicMock()
         mock_client.chat.completions.create.return_value = mock_response
-        mock_config.get_client.return_value = mock_client
+        mock_config.get_zhipu_client.return_value = mock_client
         
         generator = PoemArticleGenerator()
         result = generator.generate_article(
@@ -180,7 +180,7 @@ class TestPoemArticleGeneratorIntegration:
         
         mock_client = MagicMock()
         mock_client.chat.completions.create.return_value = mock_response
-        mock_config.get_client.return_value = mock_client
+        mock_config.get_zhipu_client.return_value = mock_client
         
         generator = PoemArticleGenerator()
         

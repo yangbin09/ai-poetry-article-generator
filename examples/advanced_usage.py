@@ -3,7 +3,7 @@
 """
 高级使用示例
 
-演示AI古诗词项目的高级功能和组合使用方法。
+演示AI古诗词项目的高级功能和自定义配置。
 """
 
 import sys
@@ -11,26 +11,63 @@ import os
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import List, Dict, Any
 
 # 添加项目根目录到Python路径
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
-from src import PoemArticleGenerator, PoemImageGenerator, PromptOptimizer
+from src.infrastructure.container import Container, configure_container
+from src.interfaces.base import (
+    PoemServiceInterface, ImageServiceInterface, 
+    PromptServiceInterface, ConfigInterface
+)
+from src.domain.models import PoemArticle, ImageResult, PromptOptimization
+from src.infrastructure.config import Config
+
+
+def setup_custom_container() -> Container:
+    """设置自定义容器配置"""
+    container = Container()
+    
+    # 自定义配置
+    custom_config = Config()
+    custom_config.zhipu_api_key = os.getenv('ZHIPU_API_KEY')
+    custom_config.output_dir = Path('./custom_output')
+    custom_config.image_style = '国画'
+    
+    container.register_instance(ConfigInterface, custom_config)
+    
+    # 注册其他服务
+    from src.services.poem_service import PoemService
+    from src.services.image_service import ImageService
+    from src.services.prompt_service import PromptService
+    
+    container.register(PoemServiceInterface, PoemService)
+    container.register(ImageServiceInterface, ImageService)
+    container.register(PromptServiceInterface, PromptService)
+    
+    return container
 
 
 class PoemWorkflow:
     """古诗词处理工作流"""
     
-    def __init__(self, output_dir: str = "output"):
+    def __init__(self, container: Container, output_dir: str = "output"):
         """初始化工作流
         
         Args:
+            container: 依赖注入容器
             output_dir: 输出目录
         """
+        self.container = container
         self.output_dir = Path(output_dir)
-        self.article_generator = PoemArticleGenerator()
-        self.image_generator = PoemImageGenerator()
-        self.prompt_optimizer = PromptOptimizer()
+        
+        # 获取服务
+        self.poem_service = container.resolve(PoemServiceInterface)
+        self.image_service = container.resolve(ImageServiceInterface)
+        self.prompt_service = container.resolve(PromptServiceInterface)
+        self.config = container.resolve(ConfigInterface)
         
         # 创建输出目录
         self.output_dir.mkdir(exist_ok=True)
@@ -68,13 +105,14 @@ class PoemWorkflow:
         # 1. 生成文章
         try:
             print("📝 生成文章...")
-            article = self.article_generator.generate_article(poem_name)
-            article_path = self.article_generator.save_article(
-                poem_name, article, str(self.output_dir / "articles")
+            article = self.poem_service.generate_article(poem_name)
+            article_path = self.poem_service.save_article_to_file(
+                article, f"{poem_name}.md"
             )
             results["article"] = {
-                "content": article,
-                "file_path": article_path
+                "content": article.content,
+                "title": article.title,
+                "file_path": str(article_path)
             }
             print(f"✅ 文章生成完成: {article_path}")
         except Exception as e:
@@ -89,21 +127,30 @@ class PoemWorkflow:
                 
                 # 优化提示词
                 if poem_content:
-                    optimized_prompt = self.prompt_optimizer.optimize_poem_prompt(
-                        poem_name, poem_content, style
+                    optimization = self.prompt_service.optimize_prompt(
+                        poem_content, style
                     )
-                    results["optimized_prompts"][style] = optimized_prompt
+                    results["optimized_prompts"][style] = {
+                        "optimized_prompt": optimization.optimized_prompt,
+                        "style_suggestions": optimization.style_suggestions
+                    }
                 
                 # 生成图像
-                image_result = self.image_generator.generate_and_save_image(
-                    poem_name=poem_name,
-                    poem_content=poem_content,
-                    style=style,
-                    output_dir=str(self.output_dir / "images")
+                image_result = self.image_service.generate_image(
+                    poem_name, poem_content, style
                 )
                 
-                results["images"][style] = image_result
-                print(f"✅ {style}图像生成完成: {image_result['local_path']}")
+                # 保存图像
+                local_path = self.image_service.save_image_to_file(
+                    image_result, f"{poem_name}_{style}.jpg"
+                )
+                
+                results["images"][style] = {
+                    "url": image_result.url,
+                    "local_path": str(local_path),
+                    "style": style
+                }
+                print(f"✅ {style}图像生成完成: {local_path}")
                 
             except Exception as e:
                 error_msg = f"{style}图像生成失败: {str(e)}"
@@ -208,13 +255,13 @@ class PoemWorkflow:
         return str(report_path)
 
 
-def demo_complete_workflow():
+def demo_complete_workflow(container: Container):
     """演示完整工作流"""
     print("=" * 60)
     print("🎭 完整工作流演示")
     print("=" * 60)
     
-    workflow = PoemWorkflow()
+    workflow = PoemWorkflow(container)
     
     # 处理单首诗词
     result = workflow.process_poem_complete(
@@ -229,13 +276,13 @@ def demo_complete_workflow():
     print(f"错误: {len(result['errors'])} 个")
 
 
-def demo_batch_processing():
+def demo_batch_processing(container: Container):
     """演示批量处理"""
     print("\n" + "=" * 60)
     print("🔄 批量处理演示")
     print("=" * 60)
     
-    workflow = PoemWorkflow()
+    workflow = PoemWorkflow(container)
     
     # 定义要处理的诗词列表
     poems = [
@@ -258,22 +305,29 @@ def demo_batch_processing():
     print(f"失败: {len(batch_result['failed_poems'])} 首")
 
 
-def demo_style_comparison():
+def demo_style_comparison(container: Container):
     """演示风格对比"""
     print("\n" + "=" * 60)
     print("🎨 风格对比演示")
     print("=" * 60)
     
-    optimizer = PromptOptimizer()
+    prompt_service = container.resolve(PromptServiceInterface)
     poem_content = "床前明月光，疑是地上霜。举头望明月，低头思故乡。"
     
-    # 获取多种风格建议
-    suggestions = optimizer.get_style_suggestions(poem_content)
+    # 获取多种风格的优化提示词
+    styles = ["水墨画", "工笔画", "油画", "素描"]
     
     print("📝 不同风格的提示词对比:")
-    for style, prompt in suggestions.items():
-        print(f"\n🎭 {style}:")
-        print(f"   {prompt[:150]}..." if len(prompt) > 150 else f"   {prompt}")
+    for style in styles:
+        try:
+            optimization = prompt_service.optimize_prompt(poem_content, style)
+            print(f"\n🎭 {style}:")
+            prompt = optimization.optimized_prompt
+            print(f"   {prompt[:150]}..." if len(prompt) > 150 else f"   {prompt}")
+            if optimization.style_suggestions:
+                print(f"   建议: {', '.join(optimization.style_suggestions[:3])}")
+        except Exception as e:
+            print(f"\n❌ {style} 风格优化失败: {e}")
 
 
 def main():
@@ -288,12 +342,16 @@ def main():
         return
     
     try:
+        # 配置依赖注入容器
+        print("🔧 配置依赖注入容器...")
+        container = setup_custom_container()
+        
         # 演示高级功能
-        demo_complete_workflow()
-        demo_style_comparison()
+        demo_complete_workflow(container)
+        demo_style_comparison(container)
         
         # 可选：演示批量处理（注释掉以节省API调用）
-        # demo_batch_processing()
+        # demo_batch_processing(container)
         
         print("\n" + "=" * 60)
         print("🎉 高级功能演示完成！")

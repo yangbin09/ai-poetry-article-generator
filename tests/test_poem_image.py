@@ -22,11 +22,11 @@ class TestPoemImageGenerator:
     def test_init(self, mock_config):
         """测试初始化"""
         mock_client = MagicMock()
-        mock_config.get_client.return_value = mock_client
+        mock_config.get_zhipu_client.return_value = mock_client
         
         generator = PoemImageGenerator()
         
-        mock_config.get_client.assert_called_once()
+        mock_config.get_zhipu_client.assert_called_once()
         assert generator.client == mock_client
     
     @patch('src.poem_image.config')
@@ -38,7 +38,7 @@ class TestPoemImageGenerator:
         
         mock_client = MagicMock()
         mock_client.images.generations.return_value = mock_response
-        mock_config.get_client.return_value = mock_client
+        mock_config.get_zhipu_client.return_value = mock_client
         
         generator = PoemImageGenerator()
         result = generator.generate_image_from_prompt("美丽的山水画")
@@ -60,7 +60,7 @@ class TestPoemImageGenerator:
         
         mock_client = MagicMock()
         mock_client.images.generations.return_value = mock_response
-        mock_config.get_client.return_value = mock_client
+        mock_config.get_zhipu_client.return_value = mock_client
         
         generator = PoemImageGenerator()
         result = generator.generate_image_from_prompt(
@@ -81,7 +81,7 @@ class TestPoemImageGenerator:
         """测试图像生成失败"""
         mock_client = MagicMock()
         mock_client.images.generations.side_effect = Exception("API错误")
-        mock_config.get_client.return_value = mock_client
+        mock_config.get_zhipu_client.return_value = mock_client
         
         generator = PoemImageGenerator()
         
@@ -96,7 +96,7 @@ class TestPoemImageGenerator:
         
         mock_client = MagicMock()
         mock_client.images.generations.return_value = mock_response
-        mock_config.get_client.return_value = mock_client
+        mock_config.get_zhipu_client.return_value = mock_client
         
         generator = PoemImageGenerator()
         result = generator.generate_image_from_poem("静夜思")
@@ -118,7 +118,7 @@ class TestPoemImageGenerator:
         
         mock_client = MagicMock()
         mock_client.images.generations.return_value = mock_response
-        mock_config.get_client.return_value = mock_client
+        mock_config.get_zhipu_client.return_value = mock_client
         
         generator = PoemImageGenerator()
         result = generator.generate_image_from_poem(
@@ -219,7 +219,7 @@ class TestPoemImageGenerator:
         
         mock_client = MagicMock()
         mock_client.images.generations.return_value = mock_gen_response
-        mock_config.get_client.return_value = mock_client
+        mock_config.get_zhipu_client.return_value = mock_client
         
         # 模拟图像下载响应
         mock_download_response = MagicMock()
@@ -257,7 +257,7 @@ class TestPoemImageGeneratorIntegration:
         
         mock_client = MagicMock()
         mock_client.images.generations.return_value = mock_gen_response
-        mock_config.get_client.return_value = mock_client
+        mock_config.get_zhipu_client.return_value = mock_client
         
         # 模拟图像下载
         mock_download_response = MagicMock()
