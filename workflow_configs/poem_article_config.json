@@ -1,0 +1,12 @@
+{
+  "poem": "登鹳雀楼",
+  "save": true,
+  "output_dir": "config_output",
+  "model": "glm-4-plus",
+  "temperature": 0.8,
+  "max_tokens": 2000,
+  "timeout": 300,
+  "retry_count": 3,
+  "log_level": "INFO",
+  "env_file": ".env"
+}
