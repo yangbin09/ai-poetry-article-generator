@@ -57,40 +57,34 @@ class ImageService(ImageServiceInterface):
             logger.error(f"生成图像失败，错误: {e}")
             raise Exception(f"生成图像失败: {str(e)}")
     
-    def generate_poem_image(self, poem_content: str, style: str = "中国古典水墨画", output_path: Optional[str] = None) -> ImageResult:
+    def generate_poem_image(self, poem_name: str, custom_prompt: str = "", **kwargs) -> str:
         """生成古诗词图像
         
         Args:
-            poem_content: 诗词内容
-            style: 图像风格
-            output_path: 输出路径
+            poem_name: 诗词名称
+            custom_prompt: 自定义提示词
+            **kwargs: 其他参数
             
         Returns:
-            生成的图像结果对象
+            生成图像的本地路径
         """
         logger.info(f"开始生成古诗词图像")
         
         try:
-            # 使用生成器生成图像
-            image_path = self.generator.generate_image(
-                poem_content=poem_content,
-                style=style,
-                output_path=output_path
-            )
+            # 如果提供了自定义提示词，则使用它；否则构建基于诗词的提示词
+            if custom_prompt:
+                prompt = custom_prompt
+            else:
+                prompt = f"{poem_name}，中国古典诗词意境，唯美，高质量"
             
-            # 创建图像结果对象
-            result = ImageResult(
-                image_path=image_path,
-                poem_content=poem_content,
-                style=style,
-                metadata={
-                    'generated_at': datetime.now().isoformat(),
-                    'generator': 'PoemImageGenerator'
-                }
+            # 使用生成器生成图像
+            image_path = self.generator.generate_image_from_prompt(
+                prompt=prompt,
+                **kwargs
             )
             
             logger.info(f"古诗词图像生成成功: {image_path}")
-            return result
+            return image_path
             
         except Exception as e:
             logger.error(f"生成古诗词图像失败，错误: {e}")
