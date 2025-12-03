@@ -39,6 +39,7 @@ class Settings(ConfigInterface):
             # API配置
             'api': {
                 'zhipu_api_key': '',
+                'provider': 'zhipu',
                 'base_url': 'https://open.bigmodel.cn/api/paas/v4/',
                 'timeout': 300,
                 'max_retries': 3
@@ -84,6 +85,7 @@ class Settings(ConfigInterface):
         """加载环境变量配置"""
         env_mappings = {
             'ZHIPU_API_KEY': 'api.zhipu_api_key',
+            'AI_PROVIDER': 'api.provider',
             'API_BASE_URL': 'api.base_url',
             'API_TIMEOUT': 'api.timeout',
             'CHAT_MODEL': 'models.chat',
